@@ -7,13 +7,17 @@ services:
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     env_file: .env
-    ports:
-      - 8081:8080
+    environment:
+      - ${LETSENCRYPT_HOST}=${VIRTUAL_HOST}
+    # ports:
+      # - 8081:${VIRTUAL_PORT}
+    expose:
+      - ${VIRTUAL_PORT}
     networks:
       - public_shared
     depends_on:
       - db
-      
+
   db:
     image: mariadb
     restart: always
@@ -29,10 +33,6 @@ services:
       - firefly_db:/var/lib/mysql
 
   cron:
-    #
-    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace REPLACEME below
-    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
-    #
     image: alpine
     restart: always
     command: sh -c "echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/REPLACEME\" | crontab - && crond -f -L /dev/stdout"
